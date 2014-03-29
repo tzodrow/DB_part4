@@ -249,17 +249,42 @@ const Status HeapFileScan::scanNext(RID& outRid)
     RID		nextRid;
     RID		tmpRid;
     int 	nextPageNo;
+    Page*   nextPage;
     Record      rec;
 
-    
-	
-	
-	
-	
-	
-	
-	
-	
+    nextRid = curRec;
+
+    while(1){
+        if((status = curPage->nextRecord(nextRid, tmpRid)) != OK){
+            //End of Current Page
+            if((status = curPage->getNextPage(nextPageNo)) != OK){
+                return status;
+            }
+            if((status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag)) != OK){
+                return status;
+            }
+            if((status = bufMgr->readPage(filePtr, nextPageNo, nextPage)) != OK){
+                return status;
+            }
+            curDirtyFlag = false;
+            curPage = nextPage;
+            curPageNo = nextPageNo;
+            if((status = curPage->firstRecord(tmpRid)) != OK){
+                return status;
+            }
+        }
+
+        if((status = curPage->getRecord(tmpRid, rec)) != OK){
+            return status;
+        }
+
+        if(matchRec(rec)){
+            curRec = tmpRid;
+            return OK;
+        }
+
+        nextRid = tmpRid;
+    }	
 	
 }
 
