@@ -70,8 +70,8 @@ const Status destroyHeapFile(const string fileName)
 // constructor opens the underlying file
 HeapFile::HeapFile(const string & fileName, Status& returnStatus)
 {
-    Status 	status;
-    Page*	pagePtr;
+    Status  status;
+    Page*   pagePtr;
     int     firstPageNumber;
 
     cout << "opening file " << fileName << endl;
@@ -79,17 +79,28 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
     // open the file and read in the header page and the first data page
     if ((status = db.openFile(fileName, filePtr)) == OK)
     {
-        status = filePtr->getFistPage(firstPageNumber);
-        if (status != OK) return status;
-		
-		status = bufMgr->readPage(file)
-		
+        if((status = filePtr->getFistPage(firstPageNumber)) != OK) {
+            if((status = bufMgr->readPage(filePtr, firstPageNumber, pagePtr)) != OK){
+                hdrPageNo = firstPageNumber;
+                hdrPage = pagePtr;
+                hdrDirtyFlag = false;
+                if((status = hdrPage->getNextPage(firstPageNumber)) != OK) {
+                    if((status = bufMgr->readPage(filePtr, firstPageNumber, pagePtr)) != OK){
+                        curPageNo = firstPageNumber;
+                        curPage = pagePtr;
+                        curDirtyFlag = false;
+                        curRec = NULLRID;
+                    }
+                }
+            }
+        }
+        returnStatus = status; 
     }
     else
     {
-    	cerr << "open of heap file failed\n";
-		returnStatus = status;
-		return;
+        cerr << "open of heap file failed\n";
+        returnStatus = status;
+        return;
     }
 }
 
@@ -442,20 +453,5 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
             return OK;
         }
     }
-
-
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
 }
 
