@@ -240,17 +240,14 @@ const Status HeapFileScan::resetScan()
 
 const Status HeapFileScan::scanNext(RID& outRid)
 {
-<<<<<<< HEAD
     Status  status = OK;
     RID     nextRid;
     RID     tmpRid;
     int     nextPageNo;
-=======
     Status 	status = OK;
     RID		nextRid;
     RID		tmpRid;
     int 	nextPageNo;
->>>>>>> 09b4369c62634e0bae4b2d1981219772f61df9ef
     Page*   nextPage;
     Record      rec;
 
@@ -285,14 +282,8 @@ const Status HeapFileScan::scanNext(RID& outRid)
             return OK;
         }
 
-        nextRid = tmpRid;
-<<<<<<< HEAD
-    }   
-    
-=======
+        nextRid = tmpRid; 
     }	
-	
->>>>>>> 09b4369c62634e0bae4b2d1981219772f61df9ef
 }
 
 
