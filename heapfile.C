@@ -79,7 +79,7 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
     // open the file and read in the header page and the first data page
     if ((status = db.openFile(fileName, filePtr)) == OK)
     {
-        if((status = filePtr->getFistPage(firstPageNumber)) != OK) {
+        if((status = filePtr->getFirstPage(firstPageNumber)) != OK) {
             returnStatus = status;
             return;
         }
@@ -95,7 +95,7 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
             returnStatus = status;
             return;
         }
-        curPageNo = hdrPagePtr->firstPage;
+        curPageNo = headerPage->firstPage;
         curPage = pagePtr;
         curDirtyFlag = false;
         curRec = NULLRID;
@@ -157,7 +157,7 @@ const int HeapFile::getRecCnt() const
 const Status HeapFile::getRecord(const RID & rid, Record & rec)
 {
     Status  status;
-	Record  outRid;
+	//Record  outRid;
     int     nextPageNo;
     Page*   nextPage;
 
@@ -250,9 +250,7 @@ const Status HeapFileScan::resetScan()
     Status status;
     if (markedPageNo != curPageNo) 
     {
-		if (curPage != NULL)-)
-[zodrow@mumble-24] (7)$ 
-
+		if (curPage != NULL)
 		{
 			status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
 			if (status != OK) return status;
@@ -276,10 +274,6 @@ const Status HeapFileScan::scanNext(RID& outRid)
     RID     nextRid;
     RID     tmpRid;
     int     nextPageNo;
-    Status 	status = OK;
-    RID		nextRid;
-    RID		tmpRid;
-    int 	nextPageNo;
     Page*   nextPage;
     Record      rec;
 
@@ -427,8 +421,8 @@ InsertFileScan::~InsertFileScan()
 // Insert a record into the file
 const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 {
-    Page*	newPage;
-    int		newPageNo;
+    Page*	nextPage;
+    int		nextPageNo;
     Status	status, unpinstatus;
     RID		rid;
 
