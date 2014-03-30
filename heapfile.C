@@ -409,6 +409,21 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
         return INVALIDRECLEN;
     }
 
+    if((status = curPage->insertRecord(rec, rid)) != OK){
+        if((status = curPage->getNextPage(nextPageNo)) != OK){
+            return status;
+        }
+        if((status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag)) != OK){
+            return status;
+        }
+        if((status = bufMgr->readPage(filePtr, nextPageNo, nextPage)) != OK){
+            return status;
+        }
+        curDirtyFlag = false;
+        curPage = nextPage;
+        curPageNo = nextPageNo;
+    }
+
   
   
   
