@@ -139,28 +139,29 @@ const int HeapFile::getRecCnt() const
 
 const Status HeapFile::getRecord(const RID & rid, Record & rec)
 {
-        Status status;
-	Record outRid;
+    Status  status;
+	Record  outRid;
+    int     nextPageNo;
+    Page*   nextPage;
 
     // cout<< "getRecord. record (" << rid.pageNo << "." << rid.slotNo << ")" << endl;
-	if( rid->pageNo != curPageNo ){
-		status = bufMgr->unPinPage(filePtr, curPageNo, true);
+	if( rid.pageNo != curPageNo ){
+		if((status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag)) != OK){
+            return status;
+        }
+        if((status = bufMgr->readPage(filePtr, nextPageNo, nextPage)) != OK){
+                return status;
+        }
+        curDirtyFlag = false;
+        curPage = nextPage;
+        curPageNo = nextPageNo;
 	}
-   //get it from the current page if the rid page no is the same
-	if(rec = )){
-        outRID = curRec;
-		return curPage->getRecord(rid, rec);
-	}
-   //unpin curr page
-    else{
-		outRid = curPage;
-        status = bufMgr->unPinPage(filePtr, curPageNo, true);
-        if (status != OK) cerr << "error in unpin of data page\n";
+
+    if((status = curPage->getRecord(rid, rec)) != OK){
+        return status;
     }
-	
-    return outRid;
-   
-   
+
+    return OK;
 }
 
 HeapFileScan::HeapFileScan(const string & name,
@@ -232,7 +233,9 @@ const Status HeapFileScan::resetScan()
     Status status;
     if (markedPageNo != curPageNo) 
     {
-		if (curPage != NULL)
+		if (curPage != NULL)-)
+[zodrow@mumble-24] (7)$ 
+
 		{
 			status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
 			if (status != OK) return status;
@@ -419,20 +422,28 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
         return INVALIDRECLEN;
     }
 
-    if((status = curPage->insertRecord(rec, rid)) != OK){
-        if((status = curPage->getNextPage(nextPageNo)) != OK){
-            return status;
+    while(1){
+        if((status = curPage->insertRecord(rec, rid)) != OK){
+            if((status = curPage->getNextPage(nextPageNo)) != OK){
+                return status;
+            }
+            if((status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag)) != OK){
+                return status;
+            }
+            if((status = bufMgr->readPage(filePtr, nextPageNo, nextPage)) != OK){
+                return status;
+            }
+            curDirtyFlag = false;
+            curPage = nextPage;
+            curPageNo = nextPageNo;
         }
-        if((status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag)) != OK){
-            return status;
+        else{
+            outRid = rid;
+            return OK;
         }
-        if((status = bufMgr->readPage(filePtr, nextPageNo, nextPage)) != OK){
-            return status;
-        }
-        curDirtyFlag = false;
-        curPage = nextPage;
-        curPageNo = nextPageNo;
     }
+
+
 
   
   
