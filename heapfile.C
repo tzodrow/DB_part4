@@ -87,22 +87,20 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
             returnStatus = status;
             return;
         }
-        hdrPageNo = firstPageNumber;
-        hdrPage = pagePtr;
+        headerPageNo = firstPageNumber;
+        headerPage = (FileHdrPage*) pagePtr;
+        strcpy(headerPage->fileName, fileName.c_str());
         hdrDirtyFlag = false;
-        if((status = hdrPage->getNextPage(firstPageNumber)) != OK) {
+        if((status = bufMgr->readPage(filePtr, headerPage->firstPage, pagePtr)) != OK) {
             returnStatus = status;
             return;
         }
-        if((status = bufMgr->readPage(filePtr, firstPageNumber, pagePtr)) != OK){
-            returnStatus = status;
-            return;
-        }
-        curPageNo = firstPageNumber;
+        curPageNo = hdrPagePtr->firstPage;
         curPage = pagePtr;
         curDirtyFlag = false;
         curRec = NULLRID;
         returnStatus = status; 
+        return;
     }
     else
     {
