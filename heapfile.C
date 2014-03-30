@@ -72,22 +72,17 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
 {
     Status 	status;
     Page*	pagePtr;
+    int     firstPageNumber;
 
     cout << "opening file " << fileName << endl;
 
     // open the file and read in the header page and the first data page
     if ((status = db.openFile(fileName, filePtr)) == OK)
     {
+        status = filePtr->getFistPage(firstPageNumber);
+        if (status != OK) return status;
 		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+		status = bufMgr->readPage(file)
 		
     }
     else
@@ -245,10 +240,17 @@ const Status HeapFileScan::resetScan()
 
 const Status HeapFileScan::scanNext(RID& outRid)
 {
+<<<<<<< HEAD
+    Status  status = OK;
+    RID     nextRid;
+    RID     tmpRid;
+    int     nextPageNo;
+=======
     Status 	status = OK;
     RID		nextRid;
     RID		tmpRid;
     int 	nextPageNo;
+>>>>>>> 09b4369c62634e0bae4b2d1981219772f61df9ef
     Page*   nextPage;
     Record      rec;
 
@@ -284,8 +286,13 @@ const Status HeapFileScan::scanNext(RID& outRid)
         }
 
         nextRid = tmpRid;
+<<<<<<< HEAD
+    }   
+    
+=======
     }	
 	
+>>>>>>> 09b4369c62634e0bae4b2d1981219772f61df9ef
 }
 
 
