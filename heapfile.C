@@ -139,14 +139,26 @@ const int HeapFile::getRecCnt() const
 
 const Status HeapFile::getRecord(const RID & rid, Record & rec)
 {
-    Status status;
+        Status status;
+	Record outRid;
 
     // cout<< "getRecord. record (" << rid.pageNo << "." << rid.slotNo << ")" << endl;
-   
-   
-   
-   
-   
+	if( rid->pageNo != curPageNo ){
+		status = bufMgr->unPinPage(filePtr, curPageNo, true);
+	}
+   //get it from the current page if the rid page no is the same
+	if(rec = )){
+        outRID = curRec;
+		return curPage->getRecord(rid, rec);
+	}
+   //unpin curr page
+    else{
+		outRid = curPage;
+        status = bufMgr->unPinPage(filePtr, curPageNo, true);
+        if (status != OK) cerr << "error in unpin of data page\n";
+    }
+	
+    return outRid;
    
    
 }
@@ -435,5 +447,4 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
   
   
 }
-
 
