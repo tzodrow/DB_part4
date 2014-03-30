@@ -80,20 +80,28 @@ HeapFile::HeapFile(const string & fileName, Status& returnStatus)
     if ((status = db.openFile(fileName, filePtr)) == OK)
     {
         if((status = filePtr->getFistPage(firstPageNumber)) != OK) {
-            if((status = bufMgr->readPage(filePtr, firstPageNumber, pagePtr)) != OK){
-                hdrPageNo = firstPageNumber;
-                hdrPage = pagePtr;
-                hdrDirtyFlag = false;
-                if((status = hdrPage->getNextPage(firstPageNumber)) != OK) {
-                    if((status = bufMgr->readPage(filePtr, firstPageNumber, pagePtr)) != OK){
-                        curPageNo = firstPageNumber;
-                        curPage = pagePtr;
-                        curDirtyFlag = false;
-                        curRec = NULLRID;
-                    }
-                }
-            }
+            returnStatus = status;
+            return;
         }
+        if((status = bufMgr->readPage(filePtr, firstPageNumber, pagePtr)) != OK){
+            returnStatus = status;
+            return;
+        }
+        hdrPageNo = firstPageNumber;
+        hdrPage = pagePtr;
+        hdrDirtyFlag = false;
+        if((status = hdrPage->getNextPage(firstPageNumber)) != OK) {
+            returnStatus = status;
+            return;
+        }
+        if((status = bufMgr->readPage(filePtr, firstPageNumber, pagePtr)) != OK){
+            returnStatus = status;
+            return;
+        }
+        curPageNo = firstPageNumber;
+        curPage = pagePtr;
+        curDirtyFlag = false;
+        curRec = NULLRID;
         returnStatus = status; 
     }
     else
