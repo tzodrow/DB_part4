@@ -316,6 +316,7 @@ const Status HeapFileScan::scanNext(RID& outRid)
         if (status != OK) return status;
 
         if (matchRec(rec)) {
+            cout << "FUCK YES FOUND\n";
             curRec = nextRid;
             outRid = curRec;
             return OK;
