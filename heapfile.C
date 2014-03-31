@@ -502,7 +502,7 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
         // Unpin Current Page
         status = bufMgr->unPinPage(filePtr, curPageNo, true);
         if(status != OK){
-            // Cannot Unpin Page
+            // Cannot Unpin Page Error, Unpin New Page
             curPage = NULL;
             curPageNo = -1;
             curDirtyFlag = false;
