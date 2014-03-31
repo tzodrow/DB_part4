@@ -1,6 +1,6 @@
 // Tianchu Hunang - 906 257 9744
 // Tim Zodrow - 906 516 7760
-// Tyson Williams - 906 352 9276
+// Tyson Williams - 415 352 9276
 
 #include "heapfile.h"
 #include "error.h"
@@ -10,18 +10,18 @@ ROUTINE TO CREATE A HEAP FILE
 */
 const Status createHeapFile(const string fileName)
 {
-    File* 		    file;
-    Status 		    status;
-    FileHdrPage*	hdrPage;
-    int			    hdrPageNo;
-    int			    newPageNo;
-    Page*		    newPage;
+    File*           file;
+    Status          status;
+    FileHdrPage*    hdrPage;
+    int             hdrPageNo;
+    int             newPageNo;
+    Page*           newPage;
 
     // try to open the file. This should return an error
     status = db.openFile(fileName, file);
     if (status != OK) {
 
-		// File doesn't exist. 
+        // File doesn't exist. 
         // First create it.
         status = db.createFile(fileName);
         if (status != OK) return status;
@@ -32,7 +32,7 @@ const Status createHeapFile(const string fileName)
 
         // Allocate an empty header page.
         Page* tempHdrPage;  // Temporary header page for call below
-		status = bufMgr->allocPage(file, hdrPageNo, tempHdrPage);
+        status = bufMgr->allocPage(file, hdrPageNo, tempHdrPage);
         if (status != OK) return status;
         hdrPage = (FileHdrPage*)tempHdrPage;  // Cast back to FileHdrPage*
 
@@ -55,7 +55,7 @@ const Status createHeapFile(const string fileName)
         // unpin both pages and mark them as dirty.
         status = bufMgr->unPinPage(file, hdrPageNo, true);
         if (status != OK) return status;
-		status = bufMgr->unPinPage(file, newPageNo, true);
+        status = bufMgr->unPinPage(file, newPageNo, true);
         if (status != OK) return status;
 
         status = db.closeFile(file);
@@ -67,7 +67,7 @@ const Status createHeapFile(const string fileName)
 // routine to destroy a heapfile
 const Status destroyHeapFile(const string fileName)
 {
-	return (db.destroyFile (fileName));
+    return (db.destroyFile (fileName));
 }
 
 // constructor opens the underlying file
@@ -122,26 +122,26 @@ HeapFile::~HeapFile()
     // see if there is a pinned data page. If so, unpin it 
     if (curPage != NULL)
     {
-    	status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
-		curPage = NULL;
-		curPageNo = 0;
-		curDirtyFlag = false;
-		if (status != OK) cerr << "error in unpin of date page\n";
+        status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+        curPage = NULL;
+        curPageNo = 0;
+        curDirtyFlag = false;
+        if (status != OK) cerr << "error in unpin of date page\n";
     }
-	
-	 // unpin the header page
+    
+     // unpin the header page
     status = bufMgr->unPinPage(filePtr, headerPageNo, hdrDirtyFlag);
     if (status != OK) cerr << "error in unpin of header page\n";
-	
-	// status = bufMgr->flushFile(filePtr);  // make sure all pages of the file are flushed to disk
-	// if (status != OK) cerr << "error in flushFile call\n";
-	// before close the file
-	status = db.closeFile(filePtr);
+    
+    // status = bufMgr->flushFile(filePtr);  // make sure all pages of the file are flushed to disk
+    // if (status != OK) cerr << "error in flushFile call\n";
+    // before close the file
+    status = db.closeFile(filePtr);
     if (status != OK)
     {
-		cerr << "error in closefile call\n";
-		Error e;
-		e.print (status);
+        cerr << "error in closefile call\n";
+        Error e;
+        e.print (status);
     }
 }
 
@@ -200,16 +200,16 @@ const Status HeapFile::getRecord(const RID & rid, Record & rec)
 }
 
 HeapFileScan::HeapFileScan(const string & name,
-			   Status & status) : HeapFile(name, status)
+               Status & status) : HeapFile(name, status)
 {
     filter = NULL;
 }
 
 const Status HeapFileScan::startScan(const int offset_,
-				     const int length_,
-				     const Datatype type_, 
-				     const char* filter_,
-				     const Operator op_)
+                     const int length_,
+                     const Datatype type_, 
+                     const char* filter_,
+                     const Operator op_)
 {
     if (!filter_) {                        // no filtering requested
         filter = NULL;
@@ -244,7 +244,7 @@ const Status HeapFileScan::endScan()
         status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
         curPage = NULL;
         curPageNo = 0;
-		curDirtyFlag = false;
+        curDirtyFlag = false;
         return status;
     }
     return OK;
@@ -268,18 +268,18 @@ const Status HeapFileScan::resetScan()
     Status status;
     if (markedPageNo != curPageNo) 
     {
-		if (curPage != NULL)
-		{
-			status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
-			if (status != OK) return status;
-		}
-		// restore curPageNo and curRec values
-		curPageNo = markedPageNo;
-		curRec = markedRec;
-		// then read the page
-		status = bufMgr->readPage(filePtr, curPageNo, curPage);
-		if (status != OK) return status;
-		curDirtyFlag = false; // it will be clean
+        if (curPage != NULL)
+        {
+            status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+            if (status != OK) return status;
+        }
+        // restore curPageNo and curRec values
+        curPageNo = markedPageNo;
+        curRec = markedRec;
+        // then read the page
+        status = bufMgr->readPage(filePtr, curPageNo, curPage);
+        if (status != OK) return status;
+        curDirtyFlag = false; // it will be clean
     }
     else curRec = markedRec;
     return OK;
@@ -394,7 +394,7 @@ const bool HeapFileScan::matchRec(const Record & rec) const
     // see if offset + length is beyond end of record
     // maybe this should be an error???
     if ((offset + length -1 ) >= rec.length)
-	return false;
+    return false;
 
     float diff = 0;                       // < 0 if attr < fltr
     switch(type) {
