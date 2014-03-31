@@ -294,47 +294,23 @@ const Status HeapFileScan::scanNext(RID& outRid)
             pageFound = false;
             while(!pageFound) {
                 status = curPage->getNextPage(nextPageNo);
-                if (nextPageNo == -1)
-                    return 
+                if (nextPageNo == -1) // Ran out of pages.
+                    return FILEEOF;
+
+                status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
+                if (status != OK) return status;
+
+                status = bufMgr->readPage(filePtr, nextPageNo, curPage);
+                if (status != OK) return status;
+
+                curPageNo = nextPageNo;
+
+                status = curPage->firstRecord(nextRid);
+                if (status != OK) return status;
+                else pageFound = true;
             }
         }
     }
-
-
-
-
-
-    while(1) {
-        if((status = curPage->nextRecord(nextRid, tmpRid)) != OK){
-            //End of Current Page
-            if((status = curPage->getNextPage(nextPageNo)) != OK){
-                return status;
-            }
-            if((status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag)) != OK){
-                return status;
-            }
-            if((status = bufMgr->readPage(filePtr, nextPageNo, nextPage)) != OK){
-                return status;
-            }
-            curDirtyFlag = false;
-            curPage = nextPage;
-            curPageNo = nextPageNo;
-            if((status = curPage->firstRecord(tmpRid)) != OK){
-                return status;
-            }
-        }
-
-        if((status = curPage->getRecord(tmpRid, rec)) != OK){
-            return status;
-        }
-
-        if(matchRec(rec)){
-            curRec = tmpRid;
-            return OK;
-        }
-
-        nextRid = tmpRid; 
-    }	
 }
 
 
