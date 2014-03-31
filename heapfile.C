@@ -57,6 +57,7 @@ const Status createHeapFile(const string fileName)
         // TDOO: MARK PAGES AS DIRTY?
 
         status = db.closeFile(file);
+        return status;
     }
     return (FILEEXISTS);
 }
@@ -421,8 +422,8 @@ InsertFileScan::~InsertFileScan()
 // Insert a record into the file
 const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 {
-    Page*	nextPage;
-    int		nextPageNo;
+    Page*	nextPage, newPage;
+    int		nextPageNo, newPageNo;
     Status	status, unpinstatus;
     RID		rid;
 
@@ -438,6 +439,17 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
             if((status = curPage->getNextPage(nextPageNo)) != OK){
                 return status;
             }
+            if(nextPageNo == -1){
+                if((status = bufMgr->allocPage(filePtr, newPageNo, newPage)) != OK){
+                    return status;
+                }
+                if((status = curPage->setNextPage(newPageNo)) != OK){
+                    return status;
+                }
+                newPage->init(newPageNo);
+                nextPageNo = newPageNo;
+            }
+
             if((status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag)) != OK){
                 return status;
             }
@@ -449,6 +461,7 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
             curPageNo = nextPageNo;
         }
         else{
+            curDirtyFlag = true;
             outRid = rid;
             return OK;
         }
