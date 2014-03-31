@@ -422,8 +422,10 @@ InsertFileScan::~InsertFileScan()
 // Insert a record into the file
 const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
 {
-    Page*	nextPage, newPage;
-    int		nextPageNo, newPageNo;
+    Page*	nextPage;
+    Page*   newPage;
+    int		nextPageNo;
+    int     newPageNo;
     Status	status, unpinstatus;
     RID		rid;
 
@@ -446,8 +448,12 @@ const Status InsertFileScan::insertRecord(const Record & rec, RID& outRid)
                 if((status = curPage->setNextPage(newPageNo)) != OK){
                     return status;
                 }
+                curDirtyFlag = true;
                 newPage->init(newPageNo);
                 nextPageNo = newPageNo;
+                if((status = bufMgr->unPinPage(filePtr, newPageNo, true)) != OK){
+                    return status;
+                }
             }
 
             if((status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag)) != OK){
