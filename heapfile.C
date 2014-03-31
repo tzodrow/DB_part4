@@ -166,6 +166,7 @@ const Status HeapFile::getRecord(const RID & rid, Record & rec)
     if (rid.pageNo == curPageNo) {
         status = curPage->getRecord(rid, rec);
         if (status != OK) return status;
+
         curRec = rid;
     }
 
@@ -178,6 +179,7 @@ const Status HeapFile::getRecord(const RID & rid, Record & rec)
 
         curPage = nextPage;
         curPageNo = rid.pageNo;
+        curDirtyFlag = false;
 
         status = curPage->getRecord(rid, rec);
         if (status != OK) return status;
@@ -280,11 +282,10 @@ const Status HeapFileScan::scanNext(RID& outRid)
     RID     nextRid;
     RID     tmpRid;
     int     nextPageNo;
-    Page*   nextPage;
     Record      rec;
     bool    pageFound;
 
-    nextRid = curRec;
+    tmpRid = curRec;
 
     while(1) {
         status = curPage->nextRecord(tmpRid, nextRid);
@@ -306,10 +307,20 @@ const Status HeapFileScan::scanNext(RID& outRid)
                 curPageNo = nextPageNo;
 
                 status = curPage->firstRecord(nextRid);
-                if (status != OK) return status;
+                if (status == NORECORDS) pageFound = false;
+                else if (status != OK) return status;
                 else pageFound = true;
             }
         }
+        status = HeapFile::getRecord(nextRid, rec);
+        if (status != OK) return status;
+
+        if (matchRec(rec)) {
+            curRec = nextRid;
+            outRid = curRec;
+            return OK;
+        }
+        tmpRid = nextRid;
     }
 }
 
