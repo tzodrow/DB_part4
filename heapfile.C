@@ -1,3 +1,7 @@
+// Tianchu Hunang - 906 257 9744
+// Tim Zodrow - 906 516 7760
+// Tyson Williams - 906 352 9276
+
 #include "heapfile.h"
 #include "error.h"
 
@@ -163,24 +167,30 @@ const Status HeapFile::getRecord(const RID & rid, Record & rec)
     int     nextPageNo;
     Page*   nextPage;
 
+    // Record is on the current Page
     if (rid.pageNo == curPageNo) {
         status = curPage->getRecord(rid, rec);
         if (status != OK) return status;
 
         curRec = rid;
     }
-
+    // Find Record on another page
     else {
+
+        // Unpin Current Page
         status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
         if (status != OK) return status;
 
+        // Read The Rid Page
         status = bufMgr->readPage(filePtr, rid.pageNo, nextPage);
         if (status != OK) return status;
 
+        // Setup Current Page
         curPage = nextPage;
         curPageNo = rid.pageNo;
         curDirtyFlag = false;
 
+        // Get Record on the Page
         status = curPage->getRecord(rid, rec);
         if (status != OK) return status;
 
@@ -288,38 +298,58 @@ const Status HeapFileScan::scanNext(RID& outRid)
     tmpRid = curRec;
 
     while(1) {
+        // Check Next Record of Current Page
         status = curPage->nextRecord(tmpRid, nextRid);
-        // If status is not OK, then we've reached the end of the page.
-        if (status == ENDOFPAGE) {
+
+        // If status is not OK, then we've reached the end of the page. (Let's get another!)
+        if (status != OK) {
+
             // We now need to find a page with records.
             pageFound = false;
+
             while(!pageFound) {
+                // Get next Page of Records
                 status = curPage->getNextPage(nextPageNo);
-                if (nextPageNo == -1) // Ran out of pages.
+
+                // End of File
+                if (nextPageNo == -1)
                     return FILEEOF;
 
+                // Unpin Current Page
                 status = bufMgr->unPinPage(filePtr, curPageNo, curDirtyFlag);
                 if (status != OK) return status;
 
+                // Read Next Page (as Current Page)
                 status = bufMgr->readPage(filePtr, nextPageNo, curPage);
                 if (status != OK) return status;
 
+                // Set Current Page
                 curPageNo = nextPageNo;
 
+                // Get the first Record of Next Page
                 status = curPage->firstRecord(nextRid);
+
+                // If there is no Data
                 if (status == NORECORDS) pageFound = false;
+                // Error Status
                 else if (status != OK) return status;
+                // Page Found with Records
                 else pageFound = true;
             }
         }
+
+        // Lookup the current Record
         status = HeapFile::getRecord(nextRid, rec);
         if (status != OK) return status;
 
+        // Match Record with Search
         if (matchRec(rec)) {
             curRec = nextRid;
             outRid = curRec;
             return OK;
         }
+
+        // Check for next Record
         tmpRid = nextRid;
     }
 }
